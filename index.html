@@ -1695,6 +1695,40 @@ window.adminSetSessionStatus = async (session_id, estado) => {
 /* =========================================================
    CAPACITADOR
 ========================================================= */
+  async function getTemaForSelectedDate(session_id){
+  const sb = getSB();
+
+  const box = document.querySelector(`#sess_${CSS.escape(session_id)}`);
+  if(!box) return { ok:false };
+
+  const sel = box.querySelector(".dateSelect");
+  const fecha = sel?.selectedOptions?.[0]?.textContent?.trim() || null;
+
+  if(!fecha) return { ok:false };
+
+  const { data, error } = await sb
+    .from("session_dates")
+    .select("tema_visto")
+    .eq("session_id", session_id)
+    .eq("fecha", fecha)
+    .maybeSingle();
+
+  if(error){
+    console.error(error);
+    return { ok:false };
+  }
+
+  const tema = (data?.tema_visto || "").trim();
+
+  if(!tema){
+    return { ok:false };
+  }
+
+  return {
+    ok:true,
+    tema
+  };
+}
 function wireCapacitadorOnlyHandlers(){
   $("btnRefreshTrainer").onclick = trainerInit;
 }
