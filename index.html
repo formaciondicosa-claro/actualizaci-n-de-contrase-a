@@ -682,6 +682,48 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>6) Carga masiva de citaciones</b>
+      <hr/>
+
+<div class="item">
+
+<b>7) Crear evaluación para entrenamiento</b>
+
+<label>Training ID</label>
+<input id="evalTrainingId" placeholder="ID del entrenamiento" />
+
+<label>Nombre evaluación</label>
+<input id="evalNombre" placeholder="Evaluación final" />
+
+<label>Preguntas a mostrar</label>
+<input id="evalPreguntas" type="number" value="10" />
+
+<button id="btnCreateEvaluation">Crear evaluación</button>
+
+<div id="evalMsg" class="small"></div>
+
+</div>
+
+<hr/>
+
+<div class="item">
+
+<b>8) Subir preguntas desde Excel</b>
+
+<div class="small">
+Columnas requeridas:
+<code>pregunta,opcion_a,opcion_b,opcion_c,opcion_d,respuesta_correcta</code>
+</div>
+
+<input id="evalFile" type="file" accept=".csv,.xlsx" />
+
+<label>Evaluation ID</label>
+<input id="evalIdUpload" placeholder="ID evaluación" />
+
+<button id="btnUploadQuestions">Subir preguntas</button>
+
+<div id="evalUploadMsg" class="small"></div>
+
+</div>
       <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
       <div class="actions" style="margin-top:8px;">
         <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
@@ -821,6 +863,128 @@ async function bootApp(){
 /* =========================================================
    ADMIN
 ========================================================= */
+  async function adminCreateEvaluation(){
+
+const sb = getSB()
+
+const training_id = $("evalTrainingId").value
+const nombre = $("evalNombre").value
+const preguntas = Number($("evalPreguntas").value || 10)
+
+const msg = $("evalMsg")
+
+msg.innerHTML=""
+
+try{
+
+const { data,error } = await sb
+.from("evaluations")
+.insert({
+training_id,
+nombre,
+preguntas_totales:preguntas
+})
+.select()
+.single()
+
+if(error) throw error
+
+msg.innerHTML="<span class='ok'>Evaluación creada</span><br>ID: "+data.id
+
+}catch(e){
+
+msg.innerHTML="<span class='err'>Error:</span>"+e.message
+
+}
+
+}
+  async function adminUploadQuestions(){
+
+const sb = getSB()
+
+const file = $("evalFile").files?.[0]
+const evaluation_id = $("evalIdUpload").value
+const msg = $("evalUploadMsg")
+
+if(!file){
+
+msg.innerHTML="<span class='err'>Selecciona archivo</span>"
+return
+
+}
+
+try{
+
+let rows=[]
+
+if(file.name.endsWith(".xlsx")){
+
+const buf = await file.arrayBuffer()
+rows = parseXLSX(buf)
+
+}else{
+
+const text = await file.text()
+rows = parseDelimited(text)
+
+}
+
+const headers = rows[0].map(h=>h.toLowerCase().trim())
+
+const required = [
+"pregunta",
+"opcion_a",
+"opcion_b",
+"opcion_c",
+"opcion_d",
+"respuesta_correcta"
+]
+
+const missing = required.filter(h=>!headers.includes(h))
+
+if(missing.length){
+throw new Error("Faltan columnas: "+missing.join(", "))
+}
+
+const idx={}
+
+headers.forEach((h,i)=>idx[h]=i)
+
+const dataRows = rows.slice(1)
+
+const payload = dataRows.map(r=>({
+
+evaluation_id,
+
+pregunta:r[idx.pregunta],
+
+opcion_a:r[idx.opcion_a],
+
+opcion_b:r[idx.opcion_b],
+
+opcion_c:r[idx.opcion_c],
+
+opcion_d:r[idx.opcion_d],
+
+respuesta_correcta:r[idx.respuesta_correcta]
+
+}))
+
+const { error } = await sb
+.from("evaluation_questions")
+.insert(payload)
+
+if(error) throw error
+
+msg.innerHTML="<span class='ok'>Preguntas cargadas: "+payload.length+"</span>"
+
+}catch(e){
+
+msg.innerHTML="<span class='err'>Error:</span>"+e.message
+
+}
+
+}
 async function adminInit(){
   await adminRefreshAll();
 }
@@ -861,6 +1025,8 @@ async function adminLoadFormadores(){
 }
 
 function wireAdminHandlers(){
+  $("btnCreateEvaluation").onclick = adminCreateEvaluation
+$("btnUploadQuestions").onclick = adminUploadQuestions
   $("btnEmpTemplateCSV").onclick = () => {
     const csv = EMP_HEADERS.join(",") + "\n";
     downloadTextFile(csv, "plantilla_empleados.csv", "text/csv;charset=utf-8");
