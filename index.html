@@ -781,17 +781,36 @@ function renderCapacitadorRight(){
       <div class="small" style="margin-top:6px;">
         Columnas requeridas: <code>${EMP_HEADERS.join(", ")}</code>
       </div>
+
       <div class="actions" style="margin-top:8px;">
-        <button id="btnTrainerTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-        <button id="btnTrainerTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
+        <button id="btnTrainerTemplateCSV" class="btnMini btnGhost">Plantilla CSV</button>
+        <button id="btnTrainerTemplateXLSX" class="btnMini btnGhost">Plantilla XLSX</button>
       </div>
     </div>
 
     <hr/>
+
+    <div class="item">
+
+      <b>Activar evaluación</b>
+
+      <label>Evaluación</label>
+      <select id="trainerEvaluation"></select>
+
+      <label>Generar token</label>
+      <button id="btnGenerateToken" class="btnMini btnGhost">
+        Generar token de evaluación
+      </button>
+
+      <div id="tokenMsg" class="small" style="margin-top:8px;"></div>
+
+    </div>
+
+    <hr/>
+
     <div id="trainerSessions" class="list"></div>
   `;
 }
-
 function setPanels(role){
   if(role === "administrador"){
     $("leftPanel").innerHTML = renderAdminLeft();
@@ -874,6 +893,15 @@ const preguntas = Number($("evalPreguntas").value || 10)
 const msg = $("evalMsg")
 
 msg.innerHTML=""
+    if(!training_id){
+msg.innerHTML="<span class='err'>Debes ingresar el Training ID</span>"
+return
+}
+
+if(!nombre){
+msg.innerHTML="<span class='err'>Debes ingresar nombre de evaluación</span>"
+return
+}
 
 try{
 
@@ -905,6 +933,10 @@ const sb = getSB()
 const file = $("evalFile").files?.[0]
 const evaluation_id = $("evalIdUpload").value
 const msg = $("evalUploadMsg")
+    if(!evaluation_id){
+msg.innerHTML="<span class='err'>Debes colocar el Evaluation ID</span>"
+return
+}
 
 if(!file){
 
@@ -952,7 +984,18 @@ headers.forEach((h,i)=>idx[h]=i)
 
 const dataRows = rows.slice(1)
 
-const payload = dataRows.map(r=>({
+const payload = dataRows.map(r=>{
+
+const correct = String(r[idx.respuesta_correcta] || "")
+.trim()
+.toUpperCase()
+.replace(/[^A-D]/g,"")
+
+if(!["A","B","C","D"].includes(correct)){
+throw new Error("Respuesta correcta debe ser A,B,C o D")
+}
+
+return{
 
 evaluation_id,
 
@@ -966,10 +1009,11 @@ opcion_c:r[idx.opcion_c],
 
 opcion_d:r[idx.opcion_d],
 
-respuesta_correcta:r[idx.respuesta_correcta]
+respuesta_correcta:correct
 
-}))
+}
 
+})
 const { error } = await sb
 .from("evaluation_questions")
 .insert(payload)
@@ -1896,7 +1940,61 @@ window.adminSetSessionStatus = async (session_id, estado) => {
   };
 }
 function wireCapacitadorOnlyHandlers(){
-  $("btnRefreshTrainer").onclick = trainerInit;
+  async function trainerGenerateToken(){
+
+const sb = getSB()
+
+const evaluation_id = $("trainerEvaluation").value
+const msg = $("tokenMsg")
+
+msg.innerHTML=""
+
+if(!evaluation_id || evaluation_id===""){
+msg.innerHTML="<span class='err'>Selecciona una evaluación</span>"
+return
+}
+
+try{
+
+const token = Math.random().toString(36).substring(2,8).toUpperCase()
+
+await sb
+.from("evaluation_tokens")
+.update({activo:false})
+.eq("evaluation_id",evaluation_id)
+
+const { error } = await sb
+.from("evaluation_tokens")
+.insert({
+evaluation_id,
+token,
+activo:true
+})
+
+if(error) throw error
+
+msg.innerHTML=`<span class="ok">TOKEN generado:</span> 
+<div style="font-size:20px;font-weight:900;margin-top:6px;">
+${token}
+</div>
+<div class="small">Compártelo con los participantes para presentar la evaluación.</div>`
+
+}catch(e){
+
+msg.innerHTML="<span class='err'>Error:</span>"+e.message
+
+}
+
+}
+
+$("btnRefreshTrainer").onclick = trainerInit
+
+const btn = $("btnGenerateToken")
+
+if(btn){
+btn.onclick = trainerGenerateToken
+}
+
 }
 function wireCommonCapacitadorButtons(){
   const btnCsv = $("btnTrainerTemplateCSV");
@@ -1934,6 +2032,7 @@ function wireCommonCapacitadorButtons(){
 
 async function trainerInit(){
   await trainerLoadSessions();
+  await trainerLoadEvaluations()
 }
 
 function setTrainerLockedUI(session_id, locked, temaText=""){
@@ -1962,7 +2061,43 @@ function setTrainerLockedUI(session_id, locked, temaText=""){
     warn.style.background = "rgba(52,211,153,.08)";
   }
 }
+async function trainerLoadEvaluations(){
 
+const sb = getSB()
+const sel = $("trainerEvaluation")
+
+if(!sel) return
+
+try{
+
+const { data,error } = await sb
+.from("evaluations")
+.select("id,nombre")
+.order("nombre")
+
+if(error) throw error
+
+if(!data || !data.length){
+
+sel.innerHTML = `<option value="">No hay evaluaciones</option>`
+return
+
+}
+
+sel.innerHTML = `
+<option value="">Seleccionar evaluación</option>
+` + data.map(e=>
+`<option value="${e.id}">${e.nombre}</option>`
+).join("")
+
+}catch(e){
+
+console.error(e)
+sel.innerHTML = `<option value="">Error cargando</option>`
+
+}
+
+}
 async function trainerLoadSessions(){
   const sb = getSB();
   const cont = $("trainerSessions");
