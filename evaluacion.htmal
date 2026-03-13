@@ -1,0 +1,119 @@
+<script>
+
+const supabase = window.supabase.createClient(
+"https://ewlqelsmrnmuviylxlpur.supabase.co",
+"sb_publishable_y6G6nvMYnWpSIpcbrhah_Q_LkvOGktb"
+)
+
+let preguntas = []
+let evaluation_id = null
+let examStarted = false
+
+async function startExam(){
+
+console.log("Iniciando evaluación")
+
+const token = document.getElementById("token").value.trim()
+const cedula = document.getElementById("cedula").value.trim()
+
+if(!token || !cedula){
+alert("Debes ingresar token y cédula")
+return
+}
+
+const {data:tok,error:errTok} = await supabase
+.from("evaluation_tokens")
+.select("*")
+.eq("token",token)
+.eq("activo",true)
+.single()
+
+if(errTok || !tok){
+alert("Token inválido o inactivo")
+return
+}
+
+evaluation_id = tok.evaluation_id
+
+const {data:qs,error:errQ} = await supabase
+.from("evaluation_questions")
+.select("*")
+.eq("evaluation_id",evaluation_id)
+
+if(errQ){
+alert("Error cargando preguntas")
+console.log(errQ)
+return
+}
+
+if(!qs || qs.length === 0){
+alert("Esta evaluación no tiene preguntas cargadas")
+return
+}
+
+preguntas = qs
+examStarted = true
+
+const cont = document.getElementById("exam")
+cont.innerHTML = ""
+
+qs.forEach((q,i)=>{
+
+cont.innerHTML += `
+<div class="question">
+
+<b>${i+1}. ${q.pregunta}</b><br><br>
+
+<label><input type="radio" name="q${i}" value="A"> ${q.opcion_a}</label><br>
+<label><input type="radio" name="q${i}" value="B"> ${q.opcion_b}</label><br>
+<label><input type="radio" name="q${i}" value="C"> ${q.opcion_c}</label><br>
+<label><input type="radio" name="q${i}" value="D"> ${q.opcion_d}</label>
+
+</div>
+`
+
+})
+
+alert("Evaluación iniciada. Preguntas cargadas: " + qs.length)
+
+}
+
+async function finishExam(){
+
+if(!examStarted){
+alert("Primero debes iniciar la evaluación")
+return
+}
+
+const cedula = document.getElementById("cedula").value.trim()
+
+let correctas = 0
+
+preguntas.forEach((q,i)=>{
+
+const r = document.querySelector(`input[name="q${i}"]:checked`)
+
+if(r && r.value == q.respuesta_correcta){
+correctas++
+}
+
+})
+
+const score = Math.round((correctas / preguntas.length) * 100)
+
+alert("Resultado: "+score+"%")
+
+const aprobado = score >= 90
+
+await supabase
+.from("evaluation_attempts")
+.insert({
+evaluation_id: evaluation_id,
+cedula: cedula,
+score: score,
+aprobado: aprobado
+})
+
+}
+
+</script>
