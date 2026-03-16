@@ -8,22 +8,96 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{font-family:Arial;padding:30px}
-.question{margin-bottom:20px}
-button{padding:10px 15px;margin-top:10px}
-</style>
 
+:root{
+--violeta:#a78bfa;
+--violeta2:#7c3aed;
+--bg:#050617;
+--card:#111827;
+--border:#2a2f45;
+}
+
+body{
+font-family:Arial;
+background:linear-gradient(180deg,#050617,#0b1024);
+color:white;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+margin:0;
+}
+
+.container{
+background:var(--card);
+border:1px solid var(--border);
+padding:30px;
+border-radius:12px;
+width:420px;
+box-shadow:0 10px 40px rgba(0,0,0,.5);
+}
+
+h2{
+text-align:center;
+color:var(--violeta);
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:6px;
+margin-bottom:15px;
+border-radius:6px;
+border:1px solid var(--border);
+background:#0b1024;
+color:white;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:10px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:linear-gradient(90deg,var(--violeta2),var(--violeta));
+color:white;
+font-weight:bold;
+}
+
+button:hover{
+opacity:.9;
+}
+
+.question{
+background:#0b1024;
+padding:15px;
+border-radius:8px;
+border:1px solid var(--border);
+margin-bottom:15px;
+}
+
+label{
+display:block;
+margin-top:6px;
+cursor:pointer;
+}
+
+</style>
 </head>
 
 <body>
 
+<div class="container">
+
 <h2>Evaluación técnica</h2>
 
-<label>TOKEN</label><br>
-<input id="token"><br><br>
+<label>TOKEN</label>
+<input id="token">
 
-<label>CÉDULA</label><br>
-<input id="cedula"><br><br>
+<label>CÉDULA</label>
+<input id="cedula">
 
 <button onclick="startExam()">Iniciar evaluación</button>
 
@@ -31,25 +105,28 @@ button{padding:10px 15px;margin-top:10px}
 
 <button onclick="finishExam()">Finalizar</button>
 
+</div>
+
 <script>
 
 const db = window.supabase.createClient(
 "https://ewlqelsmrnmuvylxlpur.supabase.co",
 "sb_publishable_y6G6nvMYnWpSIpcbrhah_Q_LkvOGktb"
 )
-let preguntas = []
+
+let preguntas=[]
 
 async function startExam(){
 
-const token = document.getElementById("token").value
-const cedula = document.getElementById("cedula").value
+const token=document.getElementById("token").value
+const cedula=document.getElementById("cedula").value
 
 if(!token || !cedula){
 alert("Debes ingresar token y cédula")
 return
 }
 
-const {data:tok,error:errTok} = await db
+const {data:tok,error:errTok}=await db
 .from("evaluation_tokens")
 .select("*")
 .eq("token",token)
@@ -61,60 +138,59 @@ alert("Token inválido")
 return
 }
 
-const {data:qs} = await db
+const {data:qs}=await db
 .from("evaluation_questions")
 .select("*")
 .eq("evaluation_id",tok.evaluation_id)
 
-preguntas = qs
+preguntas=qs
 
-const cont = document.getElementById("exam")
-cont.innerHTML = ""
+const cont=document.getElementById("exam")
+cont.innerHTML=""
 
 qs.forEach((q,i)=>{
 
-cont.innerHTML += `
+cont.innerHTML+=`
 <div class="question">
 
-<b>${i+1}. ${q.pregunta}</b><br>
+<b>${i+1}. ${q.pregunta}</b>
 
-<label><input type="radio" name="q${i}" value="A"> ${q.opcion_a}</label><br>
-<label><input type="radio" name="q${i}" value="B"> ${q.opcion_b}</label><br>
-<label><input type="radio" name="q${i}" value="C"> ${q.opcion_c}</label><br>
+<label><input type="radio" name="q${i}" value="A"> ${q.opcion_a}</label>
+<label><input type="radio" name="q${i}" value="B"> ${q.opcion_b}</label>
+<label><input type="radio" name="q${i}" value="C"> ${q.opcion_c}</label>
 <label><input type="radio" name="q${i}" value="D"> ${q.opcion_d}</label>
 
 </div>
 `
-
 })
 
 }
 
 async function finishExam(){
 
-const cedula = document.getElementById("cedula").value
+const cedula=document.getElementById("cedula").value
 
-let correctas = 0
+let correctas=0
 
 preguntas.forEach((q,i)=>{
 
-const r = document.querySelector(`input[name="q${i}"]:checked`)
+const r=document.querySelector(`input[name="q${i}"]:checked`)
 
-if(r && r.value == q.respuesta_correcta){
+if(r && r.value==q.respuesta_correcta){
 correctas++
 }
 
 })
 
-const score = Math.round((correctas / preguntas.length) * 100)
+const score=Math.round((correctas/preguntas.length)*100)
 
 alert("Resultado: "+score+"%")
 
-const aprobado = score >= 90
+const aprobado=score>=90
 
-const token = document.getElementById("token").value
+const token=document.getElementById("token").value
 
-const {data:tok} = await supabase
+const {data:tok}=await db
 .from("evaluation_tokens")
 .select("*")
 .eq("token",token)
@@ -123,10 +199,10 @@ const {data:tok} = await supabase
 await db
 .from("evaluation_attempts")
 .insert({
-evaluation_id: tok.evaluation_id,
-cedula: cedula,
-score: score,
-aprobado: aprobado
+evaluation_id:tok.evaluation_id,
+cedula:cedula,
+score:score,
+aprobado:aprobado
 })
 
 }
