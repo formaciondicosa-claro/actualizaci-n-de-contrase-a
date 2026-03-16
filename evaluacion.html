@@ -1,13 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+<meta charset="UTF-8">
+<title>Evaluación técnica</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+
+body{
+font-family:Arial;
+background:#050617;
+color:white;
+display:flex;
+justify-content:center;
+padding:40px;
+}
+
+.container{
+width:500px;
+background:#111827;
+padding:30px;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+background:#0b1024;
+border:1px solid #2a2f45;
+color:white;
+}
+
+button{
+padding:10px 20px;
+background:#7c3aed;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.question{
+margin-top:20px;
+background:#0b1024;
+padding:15px;
+border-radius:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2>Evaluación técnica</h2>
+
+<label>TOKEN</label>
+<input id="token">
+
+<label>CÉDULA</label>
+<input id="cedula">
+
+<button id="btnStart">Iniciar evaluación</button>
+
+<div id="exam"></div>
+
+</div>
+
 <script>
 
 const db = window.supabase.createClient(
-"https://ewlqelsmrnmuvylxlpur.supabase.co",
+"https://ewlqelsmrnmuviylxlpur.supabase.co",
 "sb_publishable_y6G6nvMYnWpSIpcbrhah_Q_LkvOGktb"
 )
 
-let preguntas = []
-let respuestas = []
-let preguntaActual = 0
+let preguntas=[]
+let respuestas=[]
+let index=0
+
+document.getElementById("btnStart").addEventListener("click",startExam)
 
 async function startExam(){
 
@@ -19,14 +95,14 @@ alert("Debes ingresar token y cédula")
 return
 }
 
-const {data:tok,error:errTok}=await db
+const {data:tok,error}=await db
 .from("evaluation_tokens")
 .select("*")
 .eq("token",token)
 .eq("activo",true)
 .single()
 
-if(errTok){
+if(error){
 alert("Token inválido")
 return
 }
@@ -37,7 +113,7 @@ const {data:qs}=await db
 .eq("evaluation_id",tok.evaluation_id)
 
 preguntas=qs
-respuestas = new Array(qs.length)
+respuestas=new Array(qs.length)
 
 mostrarPregunta()
 
@@ -45,40 +121,41 @@ mostrarPregunta()
 
 function mostrarPregunta(){
 
-const cont=document.getElementById("exam")
-const q = preguntas[preguntaActual]
+const q=preguntas[index]
 
-cont.innerHTML = `
+const cont=document.getElementById("exam")
+
+cont.innerHTML=`
 <div class="question">
 
-<h3>${preguntaActual+1}. ${q.pregunta}</h3>
+<h3>${index+1}. ${q.pregunta}</h3>
 
 <label><input type="radio" name="resp" value="A"> ${q.opcion_a}</label><br>
 <label><input type="radio" name="resp" value="B"> ${q.opcion_b}</label><br>
 <label><input type="radio" name="resp" value="C"> ${q.opcion_c}</label><br>
 <label><input type="radio" name="resp" value="D"> ${q.opcion_d}</label><br><br>
 
-<button onclick="siguiente()">Siguiente</button>
+<button onclick="next()">Siguiente</button>
 
 </div>
 `
 
 }
 
-function siguiente(){
+function next(){
 
-const r=document.querySelector(`input[name="resp"]:checked`)
+const r=document.querySelector('input[name="resp"]:checked')
 
 if(!r){
 alert("Debes seleccionar una respuesta")
 return
 }
 
-respuestas[preguntaActual] = r.value
+respuestas[index]=r.value
 
-preguntaActual++
+index++
 
-if(preguntaActual >= preguntas.length){
+if(index>=preguntas.length){
 finalizar()
 }else{
 mostrarPregunta()
@@ -98,29 +175,7 @@ correctas++
 
 const score=Math.round((correctas/preguntas.length)*100)
 
-alert("Resultado: "+score+"%")
-
-const aprobado = score >= 90
-
-const token=document.getElementById("token").value
-const cedula=document.getElementById("cedula").value
-
-const {data:tok}=await db
-.from("evaluation_tokens")
-.select("*")
-.eq("token",token)
-.single()
-
-await db
-.from("evaluation_attempts")
-.insert({
-evaluation_id:tok.evaluation_id,
-cedula:cedula,
-score:score,
-aprobado:aprobado
-})
-
-document.getElementById("exam").innerHTML = `
+document.getElementById("exam").innerHTML=`
 <h2>Evaluación finalizada</h2>
 <p>Resultado: ${score}%</p>
 `
@@ -128,3 +183,6 @@ document.getElementById("exam").innerHTML = `
 }
 
 </script>
+
+</body>
+</html>
