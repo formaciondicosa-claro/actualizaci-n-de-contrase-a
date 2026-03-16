@@ -50,6 +50,25 @@ padding:15px;
 border-radius:6px;
 }
 
+label{
+display:flex;
+align-items:center;
+gap:10px;
+margin-top:8px;
+cursor:pointer;
+}
+
+input[type="radio"]{
+accent-color:#7c3aed;
+transform:scale(1.1);
+}
+
+#nombreEmpleado{
+margin-bottom:20px;
+font-weight:bold;
+color:#a78bfa;
+}
+
 </style>
 
 </head>
@@ -60,6 +79,8 @@ border-radius:6px;
 
 <h2>Evaluación técnica</h2>
 
+<div id="login">
+
 <label>TOKEN</label>
 <input id="token">
 
@@ -68,20 +89,30 @@ border-radius:6px;
 
 <button id="btnStart">Iniciar evaluación</button>
 
+</div>
+
+<div id="examArea" style="display:none">
+
+<div id="nombreEmpleado"></div>
+
 <div id="exam"></div>
+
+</div>
 
 </div>
 
 <script>
 
 const db = window.supabase.createClient(
-"https://ewlqelsmrnmuvylxlpur.supabase.co",
+"https://ewlqelsmrnmuviylxlpur.supabase.co",
 "sb_publishable_y6G6nvMYnWpSIpcbrhah_Q_LkvOGktb"
 )
 
 let preguntas=[]
 let respuestas=[]
 let index=0
+let empleadoNombre=""
+let evaluation_id=null
 
 document.getElementById("btnStart").addEventListener("click",startExam)
 
@@ -95,22 +126,45 @@ alert("Debes ingresar token y cédula")
 return
 }
 
-const {data:tok,error}=await db
+const {data:tok,error:errTok}=await db
 .from("evaluation_tokens")
 .select("*")
 .eq("token",token)
 .eq("activo",true)
 .single()
 
-if(error){
+if(errTok){
 alert("Token inválido")
 return
 }
 
+evaluation_id = tok.evaluation_id
+
+// VALIDAR CÉDULA
+const {data:emp,error:errEmp}=await db
+.from("v_employee")   // o employees si usas esa tabla
+.select("nombre")
+.eq("documento",cedula)
+.single()
+
+if(errEmp){
+alert("Cédula no encontrada")
+return
+}
+
+empleadoNombre = emp.nombre
+
+document.getElementById("login").style.display="none"
+document.getElementById("examArea").style.display="block"
+
+document.getElementById("nombreEmpleado").innerText =
+"Evaluación de: " + empleadoNombre
+
+// CARGAR PREGUNTAS
 const {data:qs}=await db
 .from("evaluation_questions")
 .select("*")
-.eq("evaluation_id",tok.evaluation_id)
+.eq("evaluation_id",evaluation_id)
 
 preguntas=qs
 respuestas=new Array(qs.length)
@@ -130,10 +184,12 @@ cont.innerHTML=`
 
 <h3>${index+1}. ${q.pregunta}</h3>
 
-<label><input type="radio" name="resp" value="A"> ${q.opcion_a}</label><br>
-<label><input type="radio" name="resp" value="B"> ${q.opcion_b}</label><br>
-<label><input type="radio" name="resp" value="C"> ${q.opcion_c}</label><br>
-<label><input type="radio" name="resp" value="D"> ${q.opcion_d}</label><br><br>
+<label><input type="radio" name="resp" value="A"> ${q.opcion_a}</label>
+<label><input type="radio" name="resp" value="B"> ${q.opcion_b}</label>
+<label><input type="radio" name="resp" value="C"> ${q.opcion_c}</label>
+<label><input type="radio" name="resp" value="D"> ${q.opcion_d}</label>
+
+<br><br>
 
 <button onclick="next()">Siguiente</button>
 
@@ -177,6 +233,7 @@ const score=Math.round((correctas/preguntas.length)*100)
 
 document.getElementById("exam").innerHTML=`
 <h2>Evaluación finalizada</h2>
+<p>Empleado: ${empleadoNombre}</p>
 <p>Resultado: ${score}%</p>
 `
 
