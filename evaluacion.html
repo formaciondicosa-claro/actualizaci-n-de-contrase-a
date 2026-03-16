@@ -33,11 +33,10 @@ button{padding:10px 15px;margin-top:10px}
 
 <script>
 
-const supabase = window.supabase.createClient(
+const db = window.supabase.createClient(
 "https://ewlqelsmrnmuviylxlpur.supabase.co",
 "sb_publishable_y6G6nvMYnWpSIpcbrhah_Q_LkvOGktb"
 )
-
 let preguntas = []
 
 async function startExam(){
@@ -50,7 +49,7 @@ alert("Debes ingresar token y cédula")
 return
 }
 
-const {data:tok,error:errTok} = await supabase
+const {data:tok,error:errTok} = await db
 .from("evaluation_tokens")
 .select("*")
 .eq("token",token)
@@ -62,7 +61,7 @@ alert("Token inválido")
 return
 }
 
-const {data:qs} = await supabase
+const {data:qs} = await db
 .from("evaluation_questions")
 .select("*")
 .eq("evaluation_id",tok.evaluation_id)
@@ -121,7 +120,7 @@ const {data:tok} = await supabase
 .eq("token",token)
 .single()
 
-await supabase
+await db
 .from("evaluation_attempts")
 .insert({
 evaluation_id: tok.evaluation_id,
