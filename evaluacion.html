@@ -49,7 +49,40 @@ background:#0b1024;
 padding:15px;
 border-radius:6px;
 }
+.option{
+display:flex;
+align-items:center;
+gap:10px;
+padding:12px;
+margin-top:10px;
+border-radius:8px;
+background:#0b1024;
+border:1px solid #2a2f45;
+cursor:pointer;
+}
 
+.option input{
+margin:0;
+accent-color:#7c3aed;
+transform:scale(1.2);
+}
+
+.option span{
+flex:1;
+}
+
+@media (max-width:600px){
+
+.container{
+width:100%;
+padding:20px;
+}
+
+button{
+width:100%;
+}
+
+}
 label{
 display:flex;
 align-items:center;
@@ -184,10 +217,25 @@ cont.innerHTML=`
 
 <h3>${index+1}. ${q.pregunta}</h3>
 
-<label><input type="radio" name="resp" value="A"> ${q.opcion_a}</label>
-<label><input type="radio" name="resp" value="B"> ${q.opcion_b}</label>
-<label><input type="radio" name="resp" value="C"> ${q.opcion_c}</label>
-<label><input type="radio" name="resp" value="D"> ${q.opcion_d}</label>
+<label class="option">
+<input type="radio" name="resp" value="A">
+<span>${q.opcion_a}</span>
+</label>
+
+<label class="option">
+<input type="radio" name="resp" value="B">
+<span>${q.opcion_b}</span>
+</label>
+
+<label class="option">
+<input type="radio" name="resp" value="C">
+<span>${q.opcion_c}</span>
+</label>
+
+<label class="option">
+<input type="radio" name="resp" value="D">
+<span>${q.opcion_d}</span>
+</label>
 
 <br><br>
 
