@@ -142,7 +142,7 @@ evaluation_id = tok.evaluation_id
 
 // VALIDAR CÉDULA
 const {data:emp,error:errEmp}=await db
-.from("v_employee")   // o employees si usas esa tabla
+.from("employees")
 .select("nombre")
 .eq("documento",cedula)
 .single()
