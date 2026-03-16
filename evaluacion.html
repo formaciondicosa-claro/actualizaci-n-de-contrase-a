@@ -83,12 +83,29 @@ width:100%;
 }
 
 }
-label{
+.option{
 display:flex;
 align-items:center;
-gap:10px;
-margin-top:8px;
+gap:12px;
+padding:14px;
+margin-top:12px;
+border-radius:10px;
+background:#0b1024;
+border:1px solid #2a2f45;
 cursor:pointer;
+justify-content:flex-start;
+}
+
+.option input{
+margin:0;
+accent-color:#7c3aed;
+transform:scale(1.2);
+flex-shrink:0;
+}
+
+.option span{
+flex:1;
+line-height:1.4;
 }
 
 input[type="radio"]{
@@ -118,7 +135,7 @@ color:#a78bfa;
 <input id="token">
 
 <label>CÉDULA</label>
-<input id="cedula">
+<input id="cedula" type="tel" inputmode="numeric" autocomplete="off">
 
 <button id="btnStart">Iniciar evaluación</button>
 
@@ -151,8 +168,8 @@ document.getElementById("btnStart").addEventListener("click",startExam)
 
 async function startExam(){
 
-const token=document.getElementById("token").value
-const cedula=document.getElementById("cedula").value
+const token=document.getElementById("token").value.trim()
+const cedula=document.getElementById("cedula").value.replace(/\D/g,'')
 
 if(!token || !cedula){
 alert("Debes ingresar token y cédula")
@@ -177,7 +194,7 @@ evaluation_id = tok.evaluation_id
 const {data:emp,error:errEmp}=await db
 .from("employees")
 .select("nombre")
-.eq("documento",cedula)
+.eq("documento", String(cedula))
 .single()
 
 if(errEmp){
