@@ -3,6 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Evaluación técnica</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -10,79 +11,59 @@
 <style>
 
 body{
-font-family:Arial;
+font-family:Arial, sans-serif;
 background:#050617;
 color:white;
 display:flex;
 justify-content:center;
-padding:40px;
+padding:20px;
 }
 
 .container{
-width:500px;
+width:100%;
+max-width:500px;
 background:#111827;
 padding:30px;
-border-radius:10px;
+border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.4);
+}
+
+h2{
+margin-bottom:20px;
 }
 
 input{
 width:100%;
-padding:10px;
+padding:12px;
 margin-bottom:15px;
 background:#0b1024;
 border:1px solid #2a2f45;
 color:white;
+border-radius:6px;
+font-size:16px;
 }
 
 button{
-padding:10px 20px;
+padding:12px 20px;
 background:#7c3aed;
 color:white;
 border:none;
 border-radius:6px;
 cursor:pointer;
+font-size:16px;
+}
+
+button:hover{
+background:#6d28d9;
 }
 
 .question{
 margin-top:20px;
 background:#0b1024;
-padding:15px;
-border-radius:6px;
-}
-.option{
-display:flex;
-align-items:center;
-gap:10px;
-padding:12px;
-margin-top:10px;
-border-radius:8px;
-background:#0b1024;
-border:1px solid #2a2f45;
-cursor:pointer;
+padding:18px;
+border-radius:10px;
 }
 
-.option input{
-margin:0;
-accent-color:#7c3aed;
-transform:scale(1.2);
-}
-
-.option span{
-flex:1;
-}
-
-@media (max-width:600px){
-
-.container{
-width:100%;
-padding:20px;
-}
-
-button{
-width:100%;
-}
-
-}
 .option{
 display:flex;
 align-items:center;
@@ -93,7 +74,11 @@ border-radius:10px;
 background:#0b1024;
 border:1px solid #2a2f45;
 cursor:pointer;
-justify-content:flex-start;
+transition:0.2s;
+}
+
+.option:hover{
+border-color:#7c3aed;
 }
 
 .option input{
@@ -106,17 +91,29 @@ flex-shrink:0;
 .option span{
 flex:1;
 line-height:1.4;
+word-break:break-word;
 }
 
 input[type="radio"]{
 accent-color:#7c3aed;
-transform:scale(1.1);
 }
 
 #nombreEmpleado{
 margin-bottom:20px;
 font-weight:bold;
 color:#a78bfa;
+}
+
+@media (max-width:600px){
+
+.container{
+padding:20px;
+}
+
+button{
+width:100%;
+}
+
 }
 
 </style>
@@ -176,6 +173,9 @@ alert("Debes ingresar token y cédula")
 return
 }
 
+try{
+
+// VALIDAR TOKEN
 const {data:tok,error:errTok}=await db
 .from("evaluation_tokens")
 .select("*")
@@ -183,27 +183,28 @@ const {data:tok,error:errTok}=await db
 .eq("activo",true)
 .single()
 
-if(errTok){
+if(errTok || !tok){
 alert("Token inválido")
 return
 }
 
 evaluation_id = tok.evaluation_id
 
-// VALIDAR CÉDULA
+// VALIDAR EMPLEADO
 const {data:emp,error:errEmp}=await db
 .from("employees")
 .select("nombre")
-.eq("documento", String(cedula))
+.eq("documento",cedula)
 .single()
 
-if(errEmp){
+if(errEmp || !emp){
 alert("Cédula no encontrada")
 return
 }
 
 empleadoNombre = emp.nombre
 
+// CAMBIAR PANTALLA
 document.getElementById("login").style.display="none"
 document.getElementById("examArea").style.display="block"
 
@@ -211,15 +212,27 @@ document.getElementById("nombreEmpleado").innerText =
 "Evaluación de: " + empleadoNombre
 
 // CARGAR PREGUNTAS
-const {data:qs}=await db
+const {data:qs,error:errQ}=await db
 .from("evaluation_questions")
 .select("*")
 .eq("evaluation_id",evaluation_id)
+
+if(errQ || !qs || qs.length===0){
+alert("No hay preguntas disponibles")
+return
+}
 
 preguntas=qs
 respuestas=new Array(qs.length)
 
 mostrarPregunta()
+
+}catch(e){
+
+console.error(e)
+alert("Error conectando con el servidor")
+
+}
 
 }
 
@@ -254,7 +267,7 @@ cont.innerHTML=`
 <span>${q.opcion_d}</span>
 </label>
 
-<br><br>
+<br>
 
 <button onclick="next()">Siguiente</button>
 
