@@ -829,6 +829,7 @@ function setPanels(role){
    BOOT
 ========================================================= */
 let STATE = { user:null, profile:null };
+  let CURRENT_SESSION_ID = null;  
 
 async function bootApp(){
   const sb = getSB();
@@ -1940,25 +1941,30 @@ window.adminSetSessionStatus = async (session_id, estado) => {
   };
 }
 function wireCapacitadorOnlyHandlers(){
-  async function trainerGenerateToken(){
+async function trainerGenerateToken(){
 
-const sessionBox = document.querySelector("#trainerSessions .item")
 const msg = $("tokenMsg")
+msg.innerHTML = ""
 
-msg.innerHTML=""
+const sb = getSB()
 
-if(!sessionBox){
-msg.innerHTML = "<span class='err'>No hay sesión disponible</span>"
+if(!CURRENT_SESSION_ID){
+msg.innerHTML = "<span class='err'>Selecciona una sesión</span>"
 return
 }
 
-const session_id = sessionBox.id.replace("sess_","")
-const sb = getSB()
+const session_id = CURRENT_SESSION_ID
 
+if(!session_id){
+msg.innerHTML = "<span class='err'>Session_id inválido</span>"
+return
+}
+
+// 🔥 evaluación
 const evaluation_id = $("trainerEvaluation").value
 
-if(!evaluation_id || evaluation_id===""){
-msg.innerHTML="<span class='err'>Selecciona una evaluación</span>"
+if(!evaluation_id){
+msg.innerHTML = "<span class='err'>Selecciona una evaluación</span>"
 return
 }
 
@@ -1966,14 +1972,14 @@ try{
 
 const token = crypto.randomUUID().slice(0,8).toUpperCase()
 
-// apagar tokens anteriores SOLO activos
+// 🔥 apagar tokens anteriores
 await sb
 .from("evaluation_tokens")
 .update({ activo:false })
 .eq("session_id", session_id)
 .eq("activo", true)
 
-// crear nuevo token
+// 🔥 crear nuevo token
 const { error } = await sb
 .from("evaluation_tokens")
 .insert({
@@ -1985,19 +1991,23 @@ const { error } = await sb
 
 if(error) throw error
 
-msg.innerHTML=`<span class="ok">TOKEN generado:</span> 
-<div style="font-size:20px;font-weight:900;margin-top:6px;">
+msg.innerHTML = `
+<span class="ok">TOKEN generado:</span>
+<div style="font-size:22px;font-weight:900;margin-top:6px;">
 ${token}
 </div>
-<div class="small">Compártelo con los participantes para presentar la evaluación.</div>`
+<div class="small">Compártelo con los participantes</div>
+`
 
 }catch(e){
 
-msg.innerHTML="<span class='err'>Error:</span>"+e.message
+msg.innerHTML = "<span class='err'>Error:</span> " + e.message
 
 }
 
 }
+
+
 $("btnRefreshTrainer").onclick = trainerInit
 
 const btn = $("btnGenerateToken")
@@ -2138,7 +2148,7 @@ async function trainerLoadSessions(){
     cont.innerHTML = sessions.map(s => {
       const trName = s.trainings?.nombre || "Entrenamiento";
       return `
-        <div class="item" id="sess_${s.id}">
+        <div class="item" id="sess_${s.id}" onclick="selectSession('${s.id}')">
           <b>${esc(trName)}</b>
           <div class="small">Sesión · ${esc(s.fecha)} · ${esc(s.ciudad || "")}</div>
 
@@ -2302,7 +2312,22 @@ window.trainerSaveTema = async (session_id) => {
     setLog(e);
   }
 };
+window.selectSession = function(session_id){
 
+CURRENT_SESSION_ID = session_id
+
+// quitar borde a todas
+document.querySelectorAll("#trainerSessions .item")
+.forEach(el => el.style.border = "1px solid var(--border-soft)")
+
+// resaltar seleccionada
+const box = document.getElementById("sess_" + session_id)
+
+if(box){
+box.style.border = "2px solid #34d399"
+}
+
+}
 async function trainerLoadCitadosInto(session_id){
   const sb = getSB();
   const sessBox = document.querySelector(`#sess_${CSS.escape(session_id)}`);
