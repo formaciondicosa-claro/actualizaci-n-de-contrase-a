@@ -582,22 +582,7 @@ function renderAdminLeft(){
 
     <hr/>
 
-    <div class="item">
-      <b>2) Cargar certificaciones</b>
-      <div class="small">Archivo con columnas: <code>${CERT_HEADERS.join(", ")}</code></div>
-      <div class="actions" style="margin-top:8px;">
-        <button id="btnCertTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-        <button id="btnCertTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <input id="certFile" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-        <button id="btnCertUpload" class="btnMini" type="button">Cargar certificaciones</button>
-      </div>
-      <div id="certMsg" class="small" style="margin-top:8px;"></div>
-    </div>
-
-    <hr/>
-
+  
     <div class="item">
       <b>3) Crear entrenamiento</b>
       <label>Nombre del entrenamiento</label>
@@ -1122,31 +1107,7 @@ $("btnUploadQuestions").onclick = adminUploadQuestions
     }
   };
 
-  $("btnCertTemplateCSV").onclick = () => {
-    const csv = CERT_HEADERS.join(",") + "\n";
-    downloadTextFile(csv, "plantilla_certificaciones.csv", "text/csv;charset=utf-8");
-  };
-
-  $("btnCertTemplateXLSX").onclick = () => {
-    try{
-      const ws = XLSX.utils.aoa_to_sheet([CERT_HEADERS]);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "certificaciones");
-      const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-      const blob = new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "plantilla_certificaciones.xlsx";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url), 600);
-    }catch(e){
-      setStatus(`<span class="err">Error:</span> ${esc(e.message || e)}`);
-    }
-  };
-
+ 
   $("btnEmpUpload").onclick = adminUploadEmployees;
   $("btnCreateTraining").onclick = adminCreateTraining;
   $("btnCreateSession").onclick = adminCreateSession;
@@ -1154,7 +1115,6 @@ $("btnUploadQuestions").onclick = adminUploadQuestions
   $("btnRefreshAdmin").onclick = async () => { await adminRefreshAll(); await trainerInit(); };
   $("btnSearchEmp").onclick = adminSearchEmployees;
   $("btnCiteUpload").onclick = adminUploadCitations;
-  $("btnCertUpload").onclick = adminUploadCertifications;
 }
 
 async function adminLoadSessions(){
@@ -1797,111 +1757,6 @@ async function adminUploadCitations(){
   }
 }
 
-async function adminUploadCertifications(){
-  const sb = getSB();
-  const file = $("certFile")?.files?.[0];
-  const msg = $("certMsg");
-  msg.innerHTML = "";
-
-  if(!file){ alert("Selecciona un CSV o XLSX."); return; }
-
-  $("btnCertUpload").disabled = true;
-  $("btnCertUpload").textContent = "Procesando...";
-
-  try{
-    let rows = [];
-    if(file.name.toLowerCase().endsWith(".xlsx")){
-      const buf = await file.arrayBuffer();
-      rows = parseXLSX(buf);
-    }else{
-      const text = await file.text();
-      rows = parseDelimited(text);
-    }
-
-    if(!rows.length) throw new Error("Archivo vacío.");
-
-    const headers = rows[0].map(h => val(h).toLowerCase()).map(h => h.replace(/\s+/g," ").trim());
-    const missing = CERT_HEADERS.filter(h => !headers.includes(h));
-    if(missing.length) throw new Error("Faltan columnas: " + missing.join(", "));
-
-    const idx = {};
-    headers.forEach((h,i)=> idx[h]=i);
-
-    const dataRows = rows.slice(1).filter(r => r.some(c => val(c) !== ""));
-    if(!dataRows.length) throw new Error("No hay datos.");
-
-    const raw = dataRows.map(r => ({
-      documento: normDoc(r[idx.documento]),
-      certificacion: val(r[idx.certificacion]),
-      fecha_teorica: parseDateToISO(r[idx.fecha_teorica]),
-      fecha_practica: parseDateToISO(r[idx.fecha_practica]),
-    })).filter(x => x.documento && x.certificacion);
-
-    if(!raw.length) throw new Error("No hay filas válidas.");
-
-    const docs = [...new Set(raw.map(x => x.documento))];
-    const map = new Map();
-
-    const { data, error } = await sb
-      .from("employees")
-      .select("id,documento")
-      .in("documento", docs);
-
-    if(error) throw error;
-
-    (data||[]).forEach(e => map.set(String(e.documento), e.id));
-
-    const payload = [];
-    for(const r of raw){
-      const id = map.get(String(r.documento));
-      if(!id) continue;
-      payload.push({
-        employee_id: id,
-        certificacion: r.certificacion,
-        fecha_teorica: r.fecha_teorica,
-        fecha_practica: r.fecha_practica
-      });
-    }
-
-    if(!payload.length) throw new Error("Ningún documento encontrado en employees.");
-
-    let r = await sb
-      .from("employee_certifications")
-      .upsert(payload, { onConflict: "employee_id,certificacion" });
-
-    if(r.error && String(r.error.message || "").toLowerCase().includes("on conflict")){
-      r = await sb.from("employee_certifications").insert(payload);
-    }
-    if(r.error) throw r.error;
-
-    msg.innerHTML = `<span class="ok">Certificaciones cargadas.</span> ${payload.length}`;
-  }catch(e){
-    msg.innerHTML = `<span class="err">Error:</span> ${esc(e.message||e)}`;
-    setLog(e);
-  }finally{
-    $("btnCertUpload").disabled = false;
-    $("btnCertUpload").textContent = "Cargar certificaciones";
-  }
-}
-
-window.adminSetSessionStatus = async (session_id, estado) => {
-  const sb = getSB();
-  if(!session_id || !estado) return;
-
-  const action = estado === "cerrada" ? "Cerrar" : "Reabrir";
-  if(!confirm(`¿${action} esta sesión?`)) return;
-
-  try{
-    const { error } = await sb.from("sessions").update({ estado }).eq("id", session_id);
-    if(error) throw error;
-
-    await adminRefreshAll();
-    await trainerInit();
-  }catch(e){
-    setStatus(`<span class="err">Error:</span> ${esc(e.message || e)}`);
-    setLog(e);
-  }
-};
 
 /* =========================================================
    CAPACITADOR
