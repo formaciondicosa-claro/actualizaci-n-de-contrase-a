@@ -2279,6 +2279,24 @@ if(!CURRENT_SESSION_ID){
     }
 
     const empIds = (cit || []).map(c => c.employee_id).filter(Boolean);
+    // 🔥 TRAER RESULTADOS REALES DEL EXAMEN
+let evalMap = new Map();
+
+try{
+
+  const { data: results } = await sb
+    .from("exam_results")
+    .select("employee_id, percent")
+    .eq("session_id", session_id)
+    .in("employee_id", empIds);
+
+  for(const r of (results || [])){
+    evalMap.set(r.employee_id, r);
+  }
+
+}catch(e){
+  console.error("Error cargando resultados examen", e);
+}
 
     const { data: at, error: e2 } = await sb
       .from("attendance_dates")
@@ -2322,6 +2340,24 @@ if(!CURRENT_SESSION_ID){
     for(const c of cit){
       const emp = c.employees;
       const name = emp?.nombre ? `${emp.nombre} (${emp.documento || ""})` : (c.employee_id || "");
+      const evalRes = evalMap.get(c.employee_id);
+
+let evalText = "";
+
+if(evalRes){
+
+  const percent = Number(evalRes.percent || 0)
+
+  const aprobado = percent >= 80 // 🔥 ajusta si quieres
+
+  evalText = `
+    <div class="small" style="margin-top:4px;">
+      <span class="${aprobado ? "ok" : "err"}">
+        ${percent}% · ${aprobado ? "APROBADO" : "NO APROBADO"}
+      </span>
+    </div>
+  `;
+}
       const rec = attMap.get(c.employee_id) || null;
       const asistio = rec ? rec.asistio : null;
       const late = rec ? (rec.tarde === true) : false;
@@ -2337,7 +2373,8 @@ if(!CURRENT_SESSION_ID){
           <div>
             <div class="small">
               ${esc(name)}
-              <div class="small" style="margin-top:4px;opacity:.9;">
+${evalText}
+<div class="small" style="margin-top:4px;opacity:.9;">
                 <span class="${apto ? "ok":"warn"}">${esc(prog)}</span>
                 ${late ? `<span class="warn"> · TARDE</span>` : ``}
               </div>
