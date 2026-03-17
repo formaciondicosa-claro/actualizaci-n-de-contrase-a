@@ -2362,11 +2362,7 @@ if(evalRes){
       const asistio = rec ? rec.asistio : null;
       const late = rec ? (rec.tarde === true) : false;
 
-      const attended = trueMap.get(c.employee_id) || 0;
-      const apto = (totalDays > 0 && attended >= totalDays);
-      const prog = (totalDays > 0)
-        ? `${attended}/${totalDays} ${apto ? "· APTO" : "· NO APTO"}`
-        : `0/0`;
+  
 
       table.insertAdjacentHTML("beforeend", `
         <div class="tr">
@@ -2375,7 +2371,7 @@ if(evalRes){
               ${esc(name)}
 ${evalText}
 <div class="small" style="margin-top:4px;opacity:.9;">
-                <span class="${apto ? "ok":"warn"}">${esc(prog)}</span>
+                
                 ${late ? `<span class="warn"> · TARDE</span>` : ``}
               </div>
             </div>
