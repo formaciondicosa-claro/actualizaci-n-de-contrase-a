@@ -2014,6 +2014,7 @@ sel.innerHTML = `<option value="">Error cargando</option>`
 async function trainerLoadSessions(){
   const sb = getSB();
   const cont = $("trainerSessions");
+  let sessions = []
   if(!cont) return;
 
   cont.innerHTML = `<div class="small">Cargando...</div>`;
@@ -2029,7 +2030,7 @@ if(!u || !u.data || !u.data.user){
 
 const user = u.data.user;
 
-    const { data: sessions, error } = await sb
+    const { data, error } = await sb
       .from("sessions")
       .select(`id, fecha, ciudad, estado, training_id, trainings ( nombre )`)
       .eq("formador_user_id", user.id)
@@ -2038,7 +2039,7 @@ const user = u.data.user;
       .limit(50);
 
     if(error) throw error;
-
+sessions = data || [];
     if(!sessions?.length){
       cont.innerHTML = `<div class="item"><div class="small">No hay sesiones asignadas.</div></div>`;
       return;
@@ -2103,7 +2104,22 @@ const user = u.data.user;
     }
 }
 // ✅ AUTO-SELECCIONAR SESIÓN
+for(const s of sessions){
+  await trainerLoadDatesInto(s.id);
+  await trainerLoadTemaManualInto(s.id);
+  await trainerLoadCitadosInto(s.id);
+}
+
+// ✅ AUTO-SELECCIONAR SESIÓN
 if(sessions.length > 0){
+  CURRENT_SESSION_ID = sessions[0].id;
+  await selectSession(CURRENT_SESSION_ID);
+}
+
+}catch(e){
+  cont.innerHTML = `<div class="item"><div class="small err">Error cargando sesiones</div></div>`;
+  console.error(e);
+}
 
   // 🔥 SIEMPRE tomar la primera sesión (evita estados raros)
   CURRENT_SESSION_ID = sessions[0].id;
