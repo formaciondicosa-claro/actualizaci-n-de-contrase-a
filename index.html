@@ -2058,6 +2058,19 @@ async function trainerLoadSessions(){
       await trainerLoadCitadosInto(s.id);
     }
 
+// ✅ AUTO-SELECCIONAR SESIÓN
+if(sessions.length > 0){
+
+  // si no hay sesión activa → tomar la primera
+  if(!CURRENT_SESSION_ID){
+    CURRENT_SESSION_ID = sessions[0].id;
+  }
+
+  // activar visual + lógica
+  selectSession(CURRENT_SESSION_ID);
+}
+
+    
   }catch(err){
     cont.innerHTML = `<div class="item"><div class="small"><span class="err">Error:</span> ${esc(err.message || err)}</div></div>`;
     setLog(err);
@@ -2171,7 +2184,7 @@ window.selectSession = function(session_id){
 
 CURRENT_SESSION_ID = session_id
 
-// quitar borde a todas
+// limpiar bordes
 document.querySelectorAll("#trainerSessions .item")
 .forEach(el => el.style.border = "1px solid var(--border-soft)")
 
@@ -2182,8 +2195,16 @@ if(box){
 box.style.border = "2px solid #34d399"
 }
 
+// debug (puedes borrarlo luego)
+console.log("SESSION ACTIVA:", session_id)
+
 }
 async function trainerLoadCitadosInto(session_id){
+
+// 🔥 ASEGURAR SESIÓN ACTIVA SI EL USUARIO INTERACTÚA
+if(!CURRENT_SESSION_ID){
+  CURRENT_SESSION_ID = session_id;
+}
   const sb = getSB();
   const sessBox = document.querySelector(`#sess_${CSS.escape(session_id)}`);
   if(!sessBox) return;
