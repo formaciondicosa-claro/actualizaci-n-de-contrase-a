@@ -626,8 +626,8 @@ function renderAdminLeft(){
     <div class="item">
       <b>3) Crear sesión</b>
 
-      <label>Training ID</label>
-      <input id="sessionTrainingId" placeholder="Pega el training_id" />
+      <label>Entrenamiento</label>
+      <select id="sessionTrainingId"></select>
 
       <div class="row">
         <div class="col">
@@ -1035,6 +1035,7 @@ async function adminInit(){
 }
 async function adminRefreshAll(){
   await adminLoadFormadores();
+  await adminLoadTrainings();
   await adminLoadSessions();
   await adminLoadSessionSelects();
 }
@@ -1068,7 +1069,36 @@ async function adminLoadFormadores(){
     `<option value="">Selecciona capacitador...</option>` +
     data.map(f => `<option value="${esc(f.user_id)}">${esc(f.nombre || f.user_id)} · ${esc(f.rol)}</option>`).join("");
 }
+async function adminLoadTrainings(){
+  const sb = getSB();
+  const sel = $("sessionTrainingId");
 
+  if(!sel) return;
+
+  sel.innerHTML = `<option value="">Cargando...</option>`;
+
+  try{
+    const { data, error } = await sb
+      .from("trainings")
+      .select("id,nombre")
+      .order("nombre");
+
+    if(error) throw error;
+
+    if(!data || !data.length){
+      sel.innerHTML = `<option value="">(No hay entrenamientos)</option>`;
+      return;
+    }
+
+    sel.innerHTML =
+      `<option value="">Selecciona entrenamiento...</option>` +
+      data.map(t => `<option value="${t.id}">${t.nombre}</option>`).join("");
+
+  }catch(e){
+    sel.innerHTML = `<option value="">(error)</option>`;
+    console.error(e);
+  }
+}
 function wireAdminHandlers(){
   $("btnCreateEvaluation").onclick = adminCreateEvaluation
 $("btnUploadQuestions").onclick = adminUploadQuestions
@@ -1311,7 +1341,7 @@ async function adminCreateSession(){
   const fecha = val($("sessionFecha").value);
   const ciudad = val($("sessionCiudad").value);
   const formador_user_id = $("sessionFormador").value;
-  const estado = val($("sessionEstado").value) || null;
+  const estado = "programada";
   const msg = $("sessionMsg");
   msg.innerHTML = "";
 
