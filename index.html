@@ -2014,7 +2014,8 @@ sel.innerHTML = `<option value="">Error cargando</option>`
 async function trainerLoadSessions(){
   const sb = getSB();
   const cont = $("trainerSessions");
-  let sessions = []
+  let sessions = [];
+
   if(!cont) return;
 
   cont.innerHTML = `<div class="small">Cargando...</div>`;
@@ -2022,13 +2023,12 @@ async function trainerLoadSessions(){
   try{
     const u = await sb.auth.getUser();
 
-if(!u || !u.data || !u.data.user){
-  console.error("ERROR AUTH:", u);
-  cont.innerHTML = `<div class="item"><div class="small err">No hay usuario autenticado</div></div>`;
-  return;
-}
+    if(!u || !u.data || !u.data.user){
+      cont.innerHTML = `<div class="item"><div class="small err">No hay usuario autenticado</div></div>`;
+      return;
+    }
 
-const user = u.data.user;
+    const user = u.data.user;
 
     const { data, error } = await sb
       .from("sessions")
@@ -2039,8 +2039,10 @@ const user = u.data.user;
       .limit(50);
 
     if(error) throw error;
-sessions = data || [];
-    if(!sessions?.length){
+
+    sessions = data || [];
+
+    if(!sessions.length){
       cont.innerHTML = `<div class="item"><div class="small">No hay sesiones asignadas.</div></div>`;
       return;
     }
@@ -2058,35 +2060,11 @@ sessions = data || [];
           <hr/>
 
           <label>Tema del día (manual)</label>
-          <textarea class="temaManualInput" rows="4" placeholder="Escribe aquí el tema visto en esta fecha."></textarea>
+          <textarea class="temaManualInput" rows="4"></textarea>
 
-          <button class="btnMini btnGhost" type="button" onclick="trainerSaveTema('${s.id}')">
+          <button class="btnMini btnGhost" onclick="trainerSaveTema('${s.id}')">
             Guardar tema
           </button>
-
-          <div class="small" style="margin-top:6px;opacity:.9;">
-            Se guarda en <code>session_dates.tema_visto</code> para la fecha seleccionada.
-          </div>
-
-          <div class="actions" style="margin-top:10px;">
-            <button class="btnMini btnGhost" type="button" onclick="trainerExportSessionCSV('${s.id}')">
-              Exportar asistencia (CSV)
-            </button>
-          </div>
-
-          <div class="item" style="margin-top:10px;">
-            <b>Subir asistentes a esta sesión</b>
-            <div class="small">Carga Excel o CSV con personal para citar automáticamente a esta sesión.</div>
-            <div class="row" style="margin-top:8px;">
-              <input id="trainerFile_${s.id}" type="file"
-                accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-              <button class="btnMini btnGhost" type="button"
-                onclick="trainerUploadSessionPeople('${s.id}')">
-                Subir base
-              </button>
-            </div>
-            <div id="trainerFileMsg_${s.id}" class="small" style="margin-top:8px;"></div>
-          </div>
 
           <div class="tablelike" style="margin-top:10px;">
             <div class="tr th">
@@ -2097,37 +2075,22 @@ sessions = data || [];
       `;
     }).join("");
 
+    // 🔥 CARGAR DATOS
     for(const s of sessions){
       await trainerLoadDatesInto(s.id);
       await trainerLoadTemaManualInto(s.id);
       await trainerLoadCitadosInto(s.id);
     }
-}
-// ✅ AUTO-SELECCIONAR SESIÓN
-for(const s of sessions){
-  await trainerLoadDatesInto(s.id);
-  await trainerLoadTemaManualInto(s.id);
-  await trainerLoadCitadosInto(s.id);
-}
 
-// ✅ AUTO-SELECCIONAR SESIÓN
-if(sessions.length > 0){
-  CURRENT_SESSION_ID = sessions[0].id;
-  await selectSession(CURRENT_SESSION_ID);
+    // 🔥 AUTO-SELECCIÓN CORRECTA
+    CURRENT_SESSION_ID = sessions[0].id;
+    await selectSession(CURRENT_SESSION_ID);
+
+  }catch(e){
+    cont.innerHTML = `<div class="item"><div class="small err">Error cargando sesiones</div></div>`;
+    console.error(e);
+  }
 }
-
-}catch(e){
-  cont.innerHTML = `<div class="item"><div class="small err">Error cargando sesiones</div></div>`;
-  console.error(e);
-}
-
-  // 🔥 SIEMPRE tomar la primera sesión (evita estados raros)
-  CURRENT_SESSION_ID = sessions[0].id;
-
-  // 🔥 IMPORTANTE: esperar a que termine
-  await selectSession(CURRENT_SESSION_ID);
-}
-
 
 async function trainerLoadDatesInto(session_id){
   const sb = getSB();
