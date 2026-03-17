@@ -537,6 +537,7 @@ async function doResetPassword(){
 ========================================================= */
 async function getProfile(user){
   const sb = getSB();
+
   const { data, error } = await sb
     .from("profiles")
     .select("user_id,nombre,rol,activo")
@@ -545,7 +546,10 @@ async function getProfile(user){
 
   if(error) throw error;
 
+  // 🔥 SI NO EXISTE PROFILE
   if(!data){
+    console.warn("Usuario sin profile:", user.id);
+
     return {
       user_id: user.id,
       nombre: (user.email || "usuario").split("@")[0],
@@ -554,9 +558,9 @@ async function getProfile(user){
       __missing: true
     };
   }
+
   return data;
 }
-
 /* =========================================================
    UI
 ========================================================= */
@@ -2015,8 +2019,15 @@ async function trainerLoadSessions(){
   cont.innerHTML = `<div class="small">Cargando...</div>`;
 
   try{
-    const { data: { user } } = await sb.auth.getUser();
-    if(!user) throw new Error("No hay usuario autenticado.");
+    const u = await sb.auth.getUser();
+
+if(!u || !u.data || !u.data.user){
+  console.error("ERROR AUTH:", u);
+  cont.innerHTML = `<div class="item"><div class="small err">No hay usuario autenticado</div></div>`;
+  return;
+}
+
+const user = u.data.user;
 
     const { data: sessions, error } = await sb
       .from("sessions")
