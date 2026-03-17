@@ -1818,11 +1818,10 @@ return
 // 🔥 evaluación
 const evaluation_id = $("trainerEvaluation").value
 
-if(!evaluation_id){
+if(!evaluation_id || evaluation_id === ""){
 msg.innerHTML = "<span class='err'>Selecciona una evaluación</span>"
 return
 }
-
 try{
 
 const token = crypto.randomUUID().slice(0,8).toUpperCase()
@@ -1908,7 +1907,6 @@ function wireCommonCapacitadorButtons(){
 
 async function trainerInit(){
   await trainerLoadSessions();
-  await trainerLoadEvaluations()
 }
 
 function setTrainerLockedUI(session_id, locked, temaText=""){
@@ -1946,25 +1944,60 @@ if(!sel) return
 
 try{
 
-const { data,error } = await sb
+// 🔴 1. validar sesión seleccionada
+if(!CURRENT_SESSION_ID){
+sel.innerHTML = `<option value="">Cargando sesión...</option>`
+return
+}
+
+// 🔴 2. traer training_id de la sesión
+const { data: session, error: e1 } = await sb
+.from("sessions")
+.select("training_id")
+.eq("id", CURRENT_SESSION_ID)
+.maybeSingle()
+
+if(e1) throw e1
+
+if(!session?.training_id){
+sel.innerHTML = `<option value="">Sin training</option>`
+return
+}
+
+// 🔴 3. traer SOLO evaluaciones de ese training
+const { data, error } = await sb
 .from("evaluations")
 .select("id,nombre")
+.eq("training_id", session.training_id)
+.eq("activo", true)
 .order("nombre")
 
 if(error) throw error
 
 if(!data || !data.length){
-
 sel.innerHTML = `<option value="">No hay evaluaciones</option>`
 return
-
 }
 
-sel.innerHTML = `
-<option value="">Seleccionar evaluación</option>
-` + data.map(e=>
-`<option value="${e.id}">${e.nombre}</option>`
-).join("")
+// 🔴 4. pintar select
+// 🔥 SI SOLO HAY UNA, LA SELECCIONA AUTOMÁTICO
+if(data.length === 1){
+
+  sel.innerHTML = `
+  <option value="${data[0].id}" selected>
+  ${data[0].nombre}
+  </option>
+  `
+
+}else{
+
+  sel.innerHTML = `
+  <option value="">Seleccionar evaluación</option>
+  ` + data.map(e => `
+  <option value="${e.id}">${e.nombre}</option>
+  `).join("")
+
+}
 
 }catch(e){
 
@@ -2061,21 +2094,13 @@ async function trainerLoadSessions(){
 // ✅ AUTO-SELECCIONAR SESIÓN
 if(sessions.length > 0){
 
-  // si no hay sesión activa → tomar la primera
-  if(!CURRENT_SESSION_ID){
-    CURRENT_SESSION_ID = sessions[0].id;
-  }
+  // 🔥 SIEMPRE tomar la primera sesión (evita estados raros)
+  CURRENT_SESSION_ID = sessions[0].id;
 
-  // activar visual + lógica
-  selectSession(CURRENT_SESSION_ID);
+  // 🔥 IMPORTANTE: esperar a que termine
+  await selectSession(CURRENT_SESSION_ID);
 }
 
-    
-  }catch(err){
-    cont.innerHTML = `<div class="item"><div class="small"><span class="err">Error:</span> ${esc(err.message || err)}</div></div>`;
-    setLog(err);
-  }
-}
 
 async function trainerLoadDatesInto(session_id){
   const sb = getSB();
@@ -2180,7 +2205,7 @@ window.trainerSaveTema = async (session_id) => {
     setLog(e);
   }
 };
-window.selectSession = function(session_id){
+window.selectSession = async function(session_id){
 
 CURRENT_SESSION_ID = session_id
 
@@ -2195,8 +2220,8 @@ if(box){
 box.style.border = "2px solid #34d399"
 }
 
-// debug (puedes borrarlo luego)
-console.log("SESSION ACTIVA:", session_id)
+// 🔥 CARGA TODO AUTOMÁTICO
+await trainerLoadEvaluations()
 
 }
 async function trainerLoadCitadosInto(session_id){
