@@ -573,157 +573,87 @@ function renderAdminLeft(){
     <div class="item">
       <b>1) Cargar personal (employees)</b>
       <div class="small">Archivo con columnas: <code>${EMP_HEADERS.join(", ")}</code></div>
+
       <div class="actions" style="margin-top:8px;">
-        <button id="btnEmpTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-        <button id="btnEmpTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
+        <button id="btnEmpTemplateCSV" class="btnMini btnGhost">Plantilla CSV</button>
+        <button id="btnEmpTemplateXLSX" class="btnMini btnGhost">Plantilla XLSX</button>
       </div>
+
       <div class="row" style="margin-top:10px;">
-        <input id="empFile" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-        <button id="btnEmpUpload" class="btnMini" type="button">Subir e insertar</button>
+        <input id="empFile" type="file" accept=".csv,.xlsx"/>
+        <button id="btnEmpUpload" class="btnMini">Subir</button>
       </div>
-      <div id="empMsg" class="small" style="margin-top:8px;"></div>
+
+      <div id="empMsg" class="small"></div>
     </div>
 
     <hr/>
 
-  
     <div class="item">
       <b>2) Crear entrenamiento</b>
-      <label>Nombre del entrenamiento</label>
-      <input id="trNombre" placeholder="Ej: Formación Técnica Inicial" />
-
-      <div class="row">
-        <div class="col">
-          <label>Duración (días)</label>
-          <input id="trDuracion" type="number" min="1" max="3650" value="1" />
-        </div>
-        <div class="col">
-          <label>¿Certifica?</label>
-          <select id="trCertifica">
-            <option value="true">Sí</option>
-            <option value="false">No</option>
-          </select>
-        </div>
-      </div>
-
-      <button id="btnCreateTraining" style="margin-top:12px;width:100%;" type="button">Guardar entrenamiento</button>
-      <div id="trMsg" class="small" style="margin-top:8px;"></div>
+      <input id="trNombre" placeholder="Nombre"/>
+      <input id="trDuracion" type="number" value="1"/>
+      <select id="trCertifica">
+        <option value="true">Sí</option>
+        <option value="false">No</option>
+      </select>
+      <button id="btnCreateTraining">Guardar</button>
+      <div id="trMsg" class="small"></div>
     </div>
 
     <hr/>
 
     <div class="item">
       <b>3) Crear sesión</b>
-      <label>training_id (uuid)</label>
-      <input id="sessionTrainingId" placeholder="Pega aquí el training_id" />
-
-      <div class="row">
-        <div class="col">
-          <label>Fecha inicio</label>
-          <input id="sessionFecha" type="date" />
-        </div>
-        <div class="col">
-          <label>Ciudad</label>
-          <input id="sessionCiudad" placeholder="Ej: Bogotá" />
-        </div>
-      </div>
-
-      <label>Capacitador</label>
+      <input id="sessionTrainingId" placeholder="training_id"/>
+      <input id="sessionFecha" type="date"/>
+      <input id="sessionCiudad" placeholder="Ciudad"/>
       <select id="sessionFormador"></select>
-
-      <label>Estado (opcional)</label>
-      <input id="sessionEstado" placeholder="programada" value="programada" />
-
-      <button id="btnCreateSession" style="margin-top:12px;width:100%;" type="button">Crear sesión</button>
-      <div id="sessionMsg" class="small" style="margin-top:8px;"></div>
-
-      <div id="datesBox" class="hidden" style="margin-top:12px;">
-        <b style="display:block;margin-bottom:6px;">Fechas del entrenamiento</b>
-        <div id="datesList" class="list" style="margin-top:10px;"></div>
-        <button id="btnSaveDates" class="btnMini btnGhost" style="margin-top:10px;width:100%;" type="button">Guardar fechas</button>
-        <div id="datesMsg" class="small" style="margin-top:8px;"></div>
-      </div>
+      <button id="btnCreateSession">Crear sesión</button>
+      <div id="sessionMsg" class="small"></div>
     </div>
 
     <hr/>
 
     <div class="item">
-      <b>4) Citar empleados a una sesión</b>
-      <label>Sesión</label>
+      <b>4) Citar empleados</b>
       <select id="citeSession"></select>
-
-      <div class="row">
-        <div class="col">
-          <label>Buscar empleado (documento o nombre)</label>
-          <input id="empSearch" placeholder="Ej: 123456 o Juan" />
-        </div>
-        <div class="col" style="min-width:180px;">
-          <label>&nbsp;</label>
-          <button id="btnSearchEmp" class="btnMini btnGhost" type="button">Buscar</button>
-        </div>
-      </div>
-
-      <div id="empResults" class="list" style="margin-top:10px;"></div>
-      <div id="citeMsg" class="small" style="margin-top:8px;"></div>
+      <input id="empSearch" placeholder="Buscar"/>
+      <button id="btnSearchEmp">Buscar</button>
+      <div id="empResults"></div>
+      <div id="citeMsg" class="small"></div>
     </div>
 
     <hr/>
-<div class="item">
-  <b>5) Carga masiva de citaciones</b>
 
-  <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
+    <div class="item">
+      <b>5) Carga masiva citaciones</b>
+      <input id="citeFile" type="file"/>
+      <button id="btnCiteUpload">Cargar</button>
+      <div id="citeUploadMsg" class="small"></div>
+    </div>
 
-  <div class="actions" style="margin-top:8px;">
-    <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-    <button id="btnCiteTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
-  </div>
+    <hr/>
 
-  <div class="row" style="margin-top:10px;">
-    <input id="citeFile" type="file" accept=".csv,.xlsx" />
-    <button id="btnCiteUpload" class="btnMini" type="button">Cargar citaciones</button>
-  </div>
+    <div class="item">
+      <b>6) Crear evaluación</b>
+      <input id="evalTrainingId" placeholder="training_id"/>
+      <input id="evalNombre" placeholder="Nombre"/>
+      <input id="evalPreguntas" type="number" value="10"/>
+      <button id="btnCreateEvaluation">Crear</button>
+      <div id="evalMsg" class="small"></div>
+    </div>
 
-  <div id="citeUploadMsg" class="small" style="margin-top:8px;"></div>
-</div>
+    <hr/>
 
-<hr/>
-
-<div class="item">
-  <b>6) Crear evaluación para entrenamiento</b>
-
-  <label>Training ID</label>
-  <input id="evalTrainingId" placeholder="ID del entrenamiento" />
-
-  <label>Nombre evaluación</label>
-  <input id="evalNombre" placeholder="Evaluación final" />
-
-  <label>Preguntas a mostrar</label>
-  <input id="evalPreguntas" type="number" value="10" />
-
-  <button id="btnCreateEvaluation">Crear evaluación</button>
-
-  <div id="evalMsg" class="small"></div>
-</div>
-
-<hr/>
-
-<div class="item">
-  <b>7) Subir preguntas desde Excel</b>
-
-  <div class="small">
-    Columnas requeridas:
-    <code>pregunta,opcion_a,opcion_b,opcion_c,opcion_d,respuesta_correcta</code>
-  </div>
-
-  <input id="evalFile" type="file" accept=".csv,.xlsx" />
-
-  <label>Evaluation ID</label>
-  <input id="evalIdUpload" placeholder="ID evaluación" />
-
-  <button id="btnUploadQuestions">Subir preguntas</button>
-
-  <div id="evalUploadMsg" class="small"></div>
-</div>
+    <div class="item">
+      <b>7) Subir preguntas</b>
+      <input id="evalFile" type="file"/>
+      <input id="evalIdUpload" placeholder="evaluation_id"/>
+      <button id="btnUploadQuestions">Subir</button>
+      <div id="evalUploadMsg" class="small"></div>
+    </div>
+  `;
 }
      
 function renderAdminRight(){
