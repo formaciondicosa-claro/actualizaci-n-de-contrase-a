@@ -1942,12 +1942,20 @@ window.adminSetSessionStatus = async (session_id, estado) => {
 function wireCapacitadorOnlyHandlers(){
   async function trainerGenerateToken(){
 
-const sb = getSB()
-
-const evaluation_id = $("trainerEvaluation").value
+const sessionBox = document.querySelector("#trainerSessions .item")
 const msg = $("tokenMsg")
 
 msg.innerHTML=""
+
+if(!sessionBox){
+msg.innerHTML = "<span class='err'>No hay sesión disponible</span>"
+return
+}
+
+const session_id = sessionBox.id.replace("sess_","")
+const sb = getSB()
+
+const evaluation_id = $("trainerEvaluation").value
 
 if(!evaluation_id || evaluation_id===""){
 msg.innerHTML="<span class='err'>Selecciona una evaluación</span>"
@@ -1956,19 +1964,24 @@ return
 
 try{
 
-const token = Math.random().toString(36).substring(2,8).toUpperCase()
+const token = crypto.randomUUID().slice(0,8).toUpperCase()
 
+// apagar tokens anteriores SOLO activos
 await sb
 .from("evaluation_tokens")
-.update({activo:false})
-.eq("evaluation_id",evaluation_id)
+.update({ activo:false })
+.eq("session_id", session_id)
+.eq("activo", true)
 
+// crear nuevo token
 const { error } = await sb
 .from("evaluation_tokens")
 .insert({
-evaluation_id,
-token,
-activo:true
+  evaluation_id,
+  session_id,
+  token,
+  activo:true,
+  used:false
 })
 
 if(error) throw error
@@ -1986,7 +1999,6 @@ msg.innerHTML="<span class='err'>Error:</span>"+e.message
 }
 
 }
-
 $("btnRefreshTrainer").onclick = trainerInit
 
 const btn = $("btnGenerateToken")
