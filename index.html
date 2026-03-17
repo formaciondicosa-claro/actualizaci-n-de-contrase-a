@@ -668,65 +668,63 @@ function renderAdminLeft(){
     </div>
 
     <hr/>
-
-    <div class="item">
-      <b>5) Carga masiva de citaciones</b>
-       <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
-      <div class="actions" style="margin-top:8px;">
-        <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-        <button id="btnCiteTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <input id="citeFile" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-        <button id="btnCiteUpload" class="btnMini" type="button">Cargar citaciones</button>
-      </div>
-      <div id="citeUploadMsg" class="small" style="margin-top:8px;"></div>
-    </div>
-  `;
-}
-
-      <hr/>
-
 <div class="item">
+  <b>5) Carga masiva de citaciones</b>
 
-<b>6) Crear evaluación para entrenamiento</b>
+  <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
 
-<label>Training ID</label>
-<input id="evalTrainingId" placeholder="ID del entrenamiento" />
+  <div class="actions" style="margin-top:8px;">
+    <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
+    <button id="btnCiteTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
+  </div>
 
-<label>Nombre evaluación</label>
-<input id="evalNombre" placeholder="Evaluación final" />
+  <div class="row" style="margin-top:10px;">
+    <input id="citeFile" type="file" accept=".csv,.xlsx" />
+    <button id="btnCiteUpload" class="btnMini" type="button">Cargar citaciones</button>
+  </div>
 
-<label>Preguntas a mostrar</label>
-<input id="evalPreguntas" type="number" value="10" />
-
-<button id="btnCreateEvaluation">Crear evaluación</button>
-
-<div id="evalMsg" class="small"></div>
-
+  <div id="citeUploadMsg" class="small" style="margin-top:8px;"></div>
 </div>
 
 <hr/>
 
 <div class="item">
+  <b>6) Crear evaluación para entrenamiento</b>
 
-<b>7) Subir preguntas desde Excel</b>
+  <label>Training ID</label>
+  <input id="evalTrainingId" placeholder="ID del entrenamiento" />
 
-<div class="small">
-Columnas requeridas:
-<code>pregunta,opcion_a,opcion_b,opcion_c,opcion_d,respuesta_correcta</code>
+  <label>Nombre evaluación</label>
+  <input id="evalNombre" placeholder="Evaluación final" />
+
+  <label>Preguntas a mostrar</label>
+  <input id="evalPreguntas" type="number" value="10" />
+
+  <button id="btnCreateEvaluation">Crear evaluación</button>
+
+  <div id="evalMsg" class="small"></div>
 </div>
 
-<input id="evalFile" type="file" accept=".csv,.xlsx" />
+<hr/>
 
-<label>Evaluation ID</label>
-<input id="evalIdUpload" placeholder="ID evaluación" />
+<div class="item">
+  <b>7) Subir preguntas desde Excel</b>
 
-<button id="btnUploadQuestions">Subir preguntas</button>
+  <div class="small">
+    Columnas requeridas:
+    <code>pregunta,opcion_a,opcion_b,opcion_c,opcion_d,respuesta_correcta</code>
+  </div>
 
-<div id="evalUploadMsg" class="small"></div>
+  <input id="evalFile" type="file" accept=".csv,.xlsx" />
 
+  <label>Evaluation ID</label>
+  <input id="evalIdUpload" placeholder="ID evaluación" />
+
+  <button id="btnUploadQuestions">Subir preguntas</button>
+
+  <div id="evalUploadMsg" class="small"></div>
 </div>
+}
      
 function renderAdminRight(){
   return `
