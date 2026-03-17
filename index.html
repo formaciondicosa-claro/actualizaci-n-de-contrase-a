@@ -588,7 +588,7 @@ function renderAdminLeft(){
 
   
     <div class="item">
-      <b>3) Crear entrenamiento</b>
+      <b>2) Crear entrenamiento</b>
       <label>Nombre del entrenamiento</label>
       <input id="trNombre" placeholder="Ej: Formación Técnica Inicial" />
 
@@ -613,7 +613,7 @@ function renderAdminLeft(){
     <hr/>
 
     <div class="item">
-      <b>4) Crear sesión</b>
+      <b>3) Crear sesión</b>
       <label>training_id (uuid)</label>
       <input id="sessionTrainingId" placeholder="Pega aquí el training_id" />
 
@@ -648,7 +648,7 @@ function renderAdminLeft(){
     <hr/>
 
     <div class="item">
-      <b>5) Citar empleados a una sesión</b>
+      <b>4) Citar empleados a una sesión</b>
       <label>Sesión</label>
       <select id="citeSession"></select>
 
@@ -670,12 +670,26 @@ function renderAdminLeft(){
     <hr/>
 
     <div class="item">
-      <b>6) Carga masiva de citaciones</b>
+      <b>5) Carga masiva de citaciones</b>
+       <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
+      <div class="actions" style="margin-top:8px;">
+        <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
+        <button id="btnCiteTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <input id="citeFile" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
+        <button id="btnCiteUpload" class="btnMini" type="button">Cargar citaciones</button>
+      </div>
+      <div id="citeUploadMsg" class="small" style="margin-top:8px;"></div>
+    </div>
+  `;
+}
+
       <hr/>
 
 <div class="item">
 
-<b>7) Crear evaluación para entrenamiento</b>
+<b>6) Crear evaluación para entrenamiento</b>
 
 <label>Training ID</label>
 <input id="evalTrainingId" placeholder="ID del entrenamiento" />
@@ -696,7 +710,7 @@ function renderAdminLeft(){
 
 <div class="item">
 
-<b>8) Subir preguntas desde Excel</b>
+<b>7) Subir preguntas desde Excel</b>
 
 <div class="small">
 Columnas requeridas:
@@ -713,20 +727,7 @@ Columnas requeridas:
 <div id="evalUploadMsg" class="small"></div>
 
 </div>
-      <div class="small">Archivo con columnas: <code>${CITE_HEADERS.join(", ")}</code></div>
-      <div class="actions" style="margin-top:8px;">
-        <button id="btnCiteTemplateCSV" class="btnMini btnGhost" type="button">Plantilla CSV</button>
-        <button id="btnCiteTemplateXLSX" class="btnMini btnGhost" type="button">Plantilla XLSX</button>
-      </div>
-      <div class="row" style="margin-top:10px;">
-        <input id="citeFile" type="file" accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv" />
-        <button id="btnCiteUpload" class="btnMini" type="button">Cargar citaciones</button>
-      </div>
-      <div id="citeUploadMsg" class="small" style="margin-top:8px;"></div>
-    </div>
-  `;
-}
-
+     
 function renderAdminRight(){
   return `
     <h3>Sesiones</h3>
