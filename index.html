@@ -567,12 +567,16 @@ async function getProfile(user){
 function renderAdminLeft(){
   return `
     <h3>Administrador</h3>
-    <div class="small">Crea entrenamientos, sesiones, carga personal, certificaciones y citaciones.</div>
+    <div class="small">Crea entrenamientos, sesiones, carga personal, citaciones y evaluaciones.</div>
     <hr/>
 
     <div class="item">
       <b>1) Cargar personal (employees)</b>
-      <div class="small">Archivo con columnas: <code>${EMP_HEADERS.join(", ")}</code></div>
+
+      <div class="small">
+        Archivo con columnas:
+        <code>${EMP_HEADERS.join(", ")}</code>
+      </div>
 
       <div class="actions" style="margin-top:8px;">
         <button id="btnEmpTemplateCSV" class="btnMini btnGhost">Plantilla CSV</button>
@@ -580,8 +584,8 @@ function renderAdminLeft(){
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <input id="empFile" type="file" accept=".csv,.xlsx"/>
-        <button id="btnEmpUpload" class="btnMini">Subir</button>
+        <input id="empFile" type="file" />
+        <button id="btnEmpUpload" class="btnMini">Subir empleados</button>
       </div>
 
       <div id="empMsg" class="small"></div>
@@ -591,13 +595,29 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>2) Crear entrenamiento</b>
-      <input id="trNombre" placeholder="Nombre"/>
-      <input id="trDuracion" type="number" value="1"/>
-      <select id="trCertifica">
-        <option value="true">Sí</option>
-        <option value="false">No</option>
-      </select>
-      <button id="btnCreateTraining">Guardar</button>
+
+      <label>Nombre del entrenamiento</label>
+      <input id="trNombre" placeholder="Ej: Formación Técnica Inicial" />
+
+      <div class="row">
+        <div class="col">
+          <label>Duración (días)</label>
+          <input id="trDuracion" type="number" min="1" value="1" />
+        </div>
+
+        <div class="col">
+          <label>¿Certifica?</label>
+          <select id="trCertifica">
+            <option value="true">Sí</option>
+            <option value="false">No</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="btnCreateTraining" style="margin-top:12px;width:100%;">
+        Guardar entrenamiento
+      </button>
+
       <div id="trMsg" class="small"></div>
     </div>
 
@@ -605,11 +625,29 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>3) Crear sesión</b>
-      <input id="sessionTrainingId" placeholder="training_id"/>
-      <input id="sessionFecha" type="date"/>
-      <input id="sessionCiudad" placeholder="Ciudad"/>
+
+      <label>Training ID</label>
+      <input id="sessionTrainingId" placeholder="Pega el training_id" />
+
+      <div class="row">
+        <div class="col">
+          <label>Fecha inicio</label>
+          <input id="sessionFecha" type="date" />
+        </div>
+
+        <div class="col">
+          <label>Ciudad</label>
+          <input id="sessionCiudad" placeholder="Ej: Bogotá" />
+        </div>
+      </div>
+
+      <label>Capacitador</label>
       <select id="sessionFormador"></select>
-      <button id="btnCreateSession">Crear sesión</button>
+
+      <button id="btnCreateSession" style="margin-top:12px;width:100%;">
+        Crear sesión
+      </button>
+
       <div id="sessionMsg" class="small"></div>
     </div>
 
@@ -617,19 +655,41 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>4) Citar empleados</b>
+
+      <label>Sesión</label>
       <select id="citeSession"></select>
-      <input id="empSearch" placeholder="Buscar"/>
-      <button id="btnSearchEmp">Buscar</button>
-      <div id="empResults"></div>
+
+      <label>Buscar empleado</label>
+      <input id="empSearch" placeholder="Documento o nombre" />
+
+      <button id="btnSearchEmp" class="btnMini btnGhost" style="margin-top:10px;">
+        Buscar
+      </button>
+
+      <div id="empResults" style="margin-top:10px;"></div>
       <div id="citeMsg" class="small"></div>
     </div>
 
     <hr/>
 
     <div class="item">
-      <b>5) Carga masiva citaciones</b>
-      <input id="citeFile" type="file"/>
-      <button id="btnCiteUpload">Cargar</button>
+      <b>5) Carga masiva de citaciones</b>
+
+      <div class="small">
+        Archivo con columnas:
+        <code>${CITE_HEADERS.join(", ")}</code>
+      </div>
+
+      <div class="actions" style="margin-top:8px;">
+        <button id="btnCiteTemplateCSV" class="btnMini btnGhost">Plantilla CSV</button>
+        <button id="btnCiteTemplateXLSX" class="btnMini btnGhost">Plantilla XLSX</button>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <input id="citeFile" type="file" />
+        <button id="btnCiteUpload">Cargar citaciones</button>
+      </div>
+
       <div id="citeUploadMsg" class="small"></div>
     </div>
 
@@ -637,10 +697,20 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>6) Crear evaluación</b>
-      <input id="evalTrainingId" placeholder="training_id"/>
-      <input id="evalNombre" placeholder="Nombre"/>
-      <input id="evalPreguntas" type="number" value="10"/>
-      <button id="btnCreateEvaluation">Crear</button>
+
+      <label>Training ID</label>
+      <input id="evalTrainingId" placeholder="ID del entrenamiento" />
+
+      <label>Nombre evaluación</label>
+      <input id="evalNombre" placeholder="Evaluación final" />
+
+      <label>Preguntas a mostrar</label>
+      <input id="evalPreguntas" type="number" value="10" />
+
+      <button id="btnCreateEvaluation" style="margin-top:10px;">
+        Crear evaluación
+      </button>
+
       <div id="evalMsg" class="small"></div>
     </div>
 
@@ -648,9 +718,21 @@ function renderAdminLeft(){
 
     <div class="item">
       <b>7) Subir preguntas</b>
-      <input id="evalFile" type="file"/>
-      <input id="evalIdUpload" placeholder="evaluation_id"/>
-      <button id="btnUploadQuestions">Subir</button>
+
+      <div class="small">
+        Columnas:
+        <code>pregunta, opcion_a, opcion_b, opcion_c, opcion_d, respuesta_correcta</code>
+      </div>
+
+      <input id="evalFile" type="file" />
+
+      <label>Evaluation ID</label>
+      <input id="evalIdUpload" placeholder="ID evaluación" />
+
+      <button id="btnUploadQuestions" style="margin-top:10px;">
+        Subir preguntas
+      </button>
+
       <div id="evalUploadMsg" class="small"></div>
     </div>
   `;
