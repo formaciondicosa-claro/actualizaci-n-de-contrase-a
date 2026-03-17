@@ -1179,7 +1179,6 @@ $("btnUploadQuestions").onclick = adminUploadQuestions
   $("btnEmpUpload").onclick = adminUploadEmployees;
   $("btnCreateTraining").onclick = adminCreateTraining;
   $("btnCreateSession").onclick = adminCreateSession;
-  $("btnSaveDates").onclick = adminSaveSessionDates;
   $("btnRefreshAdmin").onclick = async () => { await adminRefreshAll(); await trainerInit(); };
   $("btnSearchEmp").onclick = adminSearchEmployees;
   $("btnCiteUpload").onclick = adminUploadCitations;
@@ -1399,44 +1398,9 @@ async function adminCreateSession(){
 }
 
 async function adminPrepareSessionDatesUI(session_id, training_id, startDate){
-  const sb = getSB();
-  $("datesBox").classList.remove("hidden");
-  $("datesBox").dataset.sessionId = session_id;
-
-  let dur = 1;
-  try{
-    const { data: tr, error } = await sb
-      .from("trainings")
-      .select("vigencia_dias")
-      .eq("id", training_id)
-      .maybeSingle();
-
-    if(error) throw error;
-    dur = Math.max(1, Number(tr?.vigencia_dias || 1));
-  }catch(e){
-    dur = 1;
-  }
-
-  const list = $("datesList");
-  list.innerHTML = "";
-
-  for(let i=0;i<dur;i++){
-    const iso = addDaysISO(startDate, i);
-    list.insertAdjacentHTML("beforeend", `
-      <div class="item">
-        <div class="row" style="justify-content:space-between;align-items:center;">
-          <div class="small"><b>Día ${i+1}</b></div>
-          <div class="small"><code>${esc(session_id)}</code></div>
-        </div>
-        <label>Fecha</label>
-        <input type="date" class="dateInput" data-idx="${i}" value="${iso}" />
-      </div>
-    `);
-  }
-
-  $("datesMsg").innerHTML = `<span class="small">Sesión: <code>${esc(session_id)}</code>. Revisa/ajusta las fechas y guarda.</span>`;
+  
+  return;
 }
-
 async function adminSaveSessionDates(){
   const sb = getSB();
   const box = $("datesBox");
