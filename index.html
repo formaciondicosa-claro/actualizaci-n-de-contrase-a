@@ -1078,21 +1078,44 @@ async function adminLoadTrainings(){
   sel.innerHTML = `<option value="">Cargando...</option>`;
 
   try{
+
+    // 🔥 CALCULAR INICIO DE SEMANA (LUNES)
+    const hoy = new Date()
+    const dia = hoy.getDay() || 7
+
+    const inicioSemana = new Date(hoy)
+    inicioSemana.setDate(hoy.getDate() - dia + 1)
+    inicioSemana.setHours(0,0,0,0)
+
+    // 🔥 CONSULTA CORRECTA
     const { data, error } = await sb
       .from("trainings")
-      .select("id,nombre")
-      .order("nombre");
+      .select("id,nombre,created_at")
+      .gte("created_at", inicioSemana.toISOString())
+      .order("created_at", { ascending: false })
+.limit(5);
 
     if(error) throw error;
 
     if(!data || !data.length){
-      sel.innerHTML = `<option value="">(No hay entrenamientos)</option>`;
+      sel.innerHTML = `<option value="">(No hay entrenamientos esta semana)</option>`;
       return;
     }
 
+    // 🔥 MOSTRAR BONITO Y EVITAR CONFUSIÓN
     sel.innerHTML =
       `<option value="">Selecciona entrenamiento...</option>` +
-      data.map(t => `<option value="${t.id}">${t.nombre}</option>`).join("");
+      data.map(t => {
+
+        const fecha = new Date(t.created_at)
+        const fechaTxt = fecha.toISOString().slice(0,10)
+        const idCorto = t.id.slice(0,6)
+
+        return `<option value="${t.id}">
+          ${t.nombre} · ${fechaTxt} · ${idCorto}
+        </option>`
+
+      }).join("");
 
   }catch(e){
     sel.innerHTML = `<option value="">(error)</option>`;
@@ -1314,7 +1337,7 @@ async function adminCreateTraining(){
     const { data, error } = await sb
       .from("trainings")
       .insert({ nombre, vigencia_dias, certifica })
-      .select("id,nombre,vigencia_dias,certifica")
+      .select("id,nombre,vigencia_dias,certifica,created_at")
       .single();
 
     if(error) throw error;
